@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowRight } from "lucide-react";
-import { Button, Field, Input, Modal, cx } from "../../components/ui";
+import { Amount, Button, Field, Input, Modal, cx } from "../../components/ui";
 import { useToast } from "../../components/Toast";
 import { useSaveInvestment } from "../../lib/data";
 import { errorMessage } from "../../lib/errors";
@@ -66,10 +66,10 @@ export function InvestmentForm({ open, onClose, defaultRate, editing }: { open: 
           <Field label="Taxa" hint={editing ? "Taxa histórica deste registo." : undefined}><Input inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} suffix="MT" /></Field>
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/[0.09] to-transparent px-4 py-3.5">
+        <div className="flex min-w-0 items-center justify-between rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/[0.09] to-transparent px-4 py-3.5">
           <div>
             <div className="label">Valor em meticais</div>
-            <div className="num mt-1 text-2xl font-extrabold tracking-tight text-gold-300">{total !== null ? fmtMZN(total) : "—"}</div>
+            <div className="mt-1"><Amount size="lg" value={total !== null ? fmtMZN(total) : "—"} className="text-gold-300" /></div>
           </div>
           <div className="num hidden text-right text-xs text-bone-500 sm:block">
             {Number.isFinite(u) ? usdt : "0"} USDT <ArrowRight className="inline h-3 w-3" /> × {Number.isFinite(r) ? rate : "—"} MT
@@ -80,7 +80,7 @@ export function InvestmentForm({ open, onClose, defaultRate, editing }: { open: 
 
         <div>
           <span className="label mb-1.5 block">Destino</span>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
             {[{ v: true, t: "Carregado na conta", d: "Já está na conta de anúncios" }, { v: false, t: "Em carteira", d: "Comprado, ainda não carregado" }].map((o) => (
               <button type="button" key={String(o.v)} onClick={() => setLoaded(o.v)} className={cx(
                 "rounded-xl border px-3 py-2.5 text-left transition",

@@ -15,7 +15,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={api}>
       {children}
-      <div className="pointer-events-none fixed inset-x-0 top-3 z-[60] flex flex-col items-center gap-2 px-4 sm:bottom-6 sm:top-auto sm:items-end" aria-live="polite">
+      <div className="pointer-events-none fixed inset-x-0 top-[max(12px,env(safe-area-inset-top))] z-[60] flex flex-col items-center gap-2 px-4 sm:bottom-6 sm:top-auto sm:items-end" aria-live="polite">
         {items.map((t) => (
           <div key={t.id} role={t.kind === "error" ? "alert" : "status"}
             className="pointer-events-auto flex w-full max-w-sm animate-sheet items-start gap-3 rounded-2xl border border-white/[0.08] bg-ink-800/95 px-4 py-3 text-sm shadow-lift backdrop-blur">

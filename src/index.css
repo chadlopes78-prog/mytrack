@@ -8,7 +8,17 @@
 }
 
 @layer base {
+  html {
+    /* Impede o iOS/Android de aumentar o texto sozinho (ex.: ao rodar o ecrã). */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Remove o zoom por duplo toque, mantendo o scroll normal. */
+    touch-action: manipulation;
+  }
   html, body, #root { min-height: 100%; }
+  body { overflow-x: hidden; overscroll-behavior-y: none; }
+  /* Letra >= 16px em TODOS os campos: abaixo disso o Safari do iPhone faz zoom automático ao tocar. */
+  input, select, textarea { font-size: 16px !important; }
   body {
     @apply bg-ink-950 text-bone font-sans antialiased;
     font-feature-settings: "tnum" 1, "ss01" 1;
@@ -32,13 +42,19 @@
   .hairline { background: linear-gradient(90deg, transparent, rgba(217,180,90,0.45), transparent); height: 1px; }
   .label { @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-bone-500; }
   .input {
-    @apply w-full rounded-xl border border-white/[0.08] bg-ink-850 px-3.5 py-3 text-[15px] text-bone placeholder:text-bone-600
-           outline-none transition focus:border-gold/50 focus:bg-ink-800 focus:ring-4 focus:ring-gold/10 disabled:opacity-60;
+    @apply w-full appearance-none rounded-xl border border-white/[0.08] bg-ink-850 px-3.5 py-3 text-base text-bone placeholder:text-bone-600
+           outline-none transition focus:border-gold/50 min-h-[48px] focus:bg-ink-800 focus:ring-4 focus:ring-gold/10 disabled:opacity-60;
   }
   .num { font-variant-numeric: tabular-nums; }
   .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
+  /* Margens laterais seguras (entalhe do iPhone em modo horizontal). */
+  .px-safe { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Datas no iOS: o Safari ignora a altura e alinha o texto à esquerda de forma diferente. */
+input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; display: flex; align-items: center; }
+input[type="date"]::-webkit-date-and-time-value, input[type="datetime-local"]::-webkit-date-and-time-value { text-align: left; }

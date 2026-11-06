@@ -78,16 +78,16 @@ export default function AccountDetail() {
         <div className="space-y-5 p-5 sm:p-6">
           <div>
             <div className="label mb-1.5">E-mail ou telefone</div>
-            <div className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-ink-850 py-1.5 pl-3.5 pr-1.5">
-              <span className="min-w-0 flex-1 truncate font-semibold">{item.login}</span>
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/[0.07] bg-ink-850 p-1.5 pl-3.5">
+              <span className="min-w-0 flex-1 basis-full break-all py-1.5 font-semibold min-[420px]:basis-0">{item.login}</span>
               <Button size="sm" variant="subtle" onClick={() => doCopy(item.login, "E-mail")} icon={copied === "E-mail" ? <Check className="h-3.5 w-3.5 text-gain" /> : <Copy className="h-3.5 w-3.5" />}>Copiar e-mail</Button>
             </div>
           </div>
 
           <div>
             <div className="label mb-1.5">Palavra-passe</div>
-            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/[0.07] bg-ink-850 py-1.5 pl-3.5 pr-1.5">
-              <span className="num min-w-0 flex-1 truncate font-mono text-[15px] font-semibold tracking-wider">
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/[0.07] bg-ink-850 p-1.5 pl-3.5">
+              <span className="num min-w-0 flex-1 basis-full break-all py-1.5 font-mono text-[15px] font-semibold tracking-wider min-[420px]:basis-0">
                 {visible && secret ? secret : "••••••••••••"}
               </span>
               <div className="flex gap-1.5">
@@ -129,7 +129,7 @@ export default function AccountDetail() {
 }
 
 function BackLink() {
-  return <Link to="/contas" className="inline-flex items-center gap-1.5 text-sm font-semibold text-bone-500 hover:text-bone"><ArrowLeft className="h-4 w-4" /> Contas Facebook</Link>;
+  return <Link to="/contas" className="-my-2 inline-flex items-center gap-1.5 py-2 text-sm font-semibold text-bone-500 hover:text-bone"><ArrowLeft className="h-4 w-4" /> Contas Facebook</Link>;
 }
 
 function ReauthDialog({ open, accountId, onClose, onSuccess }: { open: boolean; accountId: string; onClose: () => void; onSuccess: (pw: string) => void }) {

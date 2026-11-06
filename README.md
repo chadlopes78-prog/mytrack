@@ -128,3 +128,13 @@ Testes de integração contra o Supabase real: registo pendente com confirmaçã
 node tests/e2e/flow.mjs
 ```
 Teste E2E em Chromium (com o ambiente local a correr): registo → confirmação → pendente → aprovação pelo admin → investimentos sucessivos (20/30/15 USDT) → cálculo (exemplo do enunciado: lucro 5.000 MT) → duplicado detectado → prejuízo e consolidação diária → edição → cofre (pesquisa, copiar, mostrar com reautenticação, ocultar) → actualizar página → logout e login noutro "dispositivo" → isolamento admin/utilizador → suspensão → layouts mobile (390 px), tablet (820 px) e desktop (1440 px). As capturas ficam em `test-results/screens/`.
+
+```bash
+node tests/e2e/mobile.mjs
+```
+Auditoria de telemóveis em 9 dispositivos: iPhone SE 1ª geração (320px), Android pequeno (360px), iPhone SE 2/3 (375px), iPhone 13 (390px), Galaxy S9+, Pixel 7 (412px), iPhone 14 Pro Max (430px), iPhone deitado e tablet. Percorre todos os ecrãs e janelas (login, financeiro, histórico, formulários, cofre, palavra-passe revelada, administração) e falha se encontrar: scroll horizontal, elementos ou texto a sair do ecrã ou do cartão, campos com letra abaixo de 16px (provocam o zoom automático no iPhone), viewport que permita zoom, ou alvos de toque abaixo de 32px. Os dados de teste incluem valores enormes e textos longos. As capturas ficam em `test-results/mobile/`.
+
+### Telemóveis: sem zoom automático
+- Todos os campos têm letra de 16px. Abaixo disso, o Safari do iPhone amplia a página ao tocar num campo.
+- `maximum-scale=1` no viewport, `touch-action: manipulation` (sem zoom por duplo toque) e `text-size-adjust: 100%` (o texto não aumenta sozinho ao rodar o ecrã).
+- Margens seguras para o entalhe e a barra inferior do iPhone (`env(safe-area-inset-*)`). Em modo horizontal, o topo deixa de ser fixo e a navegação fica compacta.

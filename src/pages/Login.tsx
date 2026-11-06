@@ -74,7 +74,7 @@ export function LoginPage() {
   return (
     <AuthShell>
       {mode !== "login" && (
-        <button onClick={() => switchMode("login")} className="mb-4 -ml-1 flex items-center gap-1 text-xs font-semibold text-bone-500 hover:text-bone"><ArrowLeft className="h-3.5 w-3.5" /> Voltar</button>
+        <button onClick={() => switchMode("login")} className="-my-1 mb-3 -ml-1 flex items-center gap-1 py-2 text-xs font-semibold text-bone-500 hover:text-bone"><ArrowLeft className="h-3.5 w-3.5" /> Voltar</button>
       )}
       <h1 className="text-xl font-bold tracking-tight">{titles[0]}</h1>
       <p className="mt-1 text-sm text-bone-500">{titles[1]}</p>
@@ -85,7 +85,7 @@ export function LoginPage() {
         </Field>
         {mode !== "forgot" && (
           <Field label="Palavra-passe" right={mode === "login" && (
-            <button type="button" onClick={() => switchMode("forgot")} className="text-xs font-semibold text-gold/90 hover:text-gold">Esqueceu-se?</button>)}>
+            <button type="button" onClick={() => switchMode("forgot")} className="-my-2 py-2 text-xs font-semibold text-gold/90 hover:text-gold">Esqueceu-se?</button>)}>
             <div className="relative">
               <Input type={show ? "text" : "password"} autoComplete={mode === "signup" ? "new-password" : "current-password"} value={password}
                 onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="pr-11" required />
@@ -109,7 +109,7 @@ export function LoginPage() {
       {mode === "login" && (
         <div className="mt-6 border-t border-white/[0.06] pt-5 text-center text-sm text-bone-500">
           Ainda não tem acesso?{" "}
-          <button onClick={() => switchMode("signup")} className="font-semibold text-gold hover:text-gold-300">Criar conta</button>
+          <button onClick={() => switchMode("signup")} className="-my-2 py-2 font-semibold text-gold hover:text-gold-300">Criar conta</button>
         </div>
       )}
     </AuthShell>

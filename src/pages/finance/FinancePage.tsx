@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { BarChart3, Calculator, ChevronRight, Coins, Pencil, Plus, Settings2, Trash2, Wallet } from "lucide-react";
 import { PageHeader } from "../../components/Layout";
-import { Button, ConfirmDialog, EmptyState, ErrorState, Input, Modal, Segmented, Skeleton, cx } from "../../components/ui";
+import { Amount, Button, ConfirmDialog, EmptyState, ErrorState, Input, Modal, Segmented, Skeleton, cx } from "../../components/ui";
 import { useToast } from "../../components/Toast";
 import { useDeleteInvestment, useDeleteReport, useInvestments, useReports, useSettings } from "../../lib/data";
 import { errorMessage } from "../../lib/errors";
@@ -38,7 +38,7 @@ export function FinancePage() {
           <Button onClick={() => { setEditRep(null); setRepOpen(true); }} icon={<Calculator className="h-4 w-4" />} disabled={loading}>Calcular resultados</Button>
         </>} />
 
-      <button onClick={() => setSettingsOpen(true)} className="-mt-3 mb-5 flex items-center gap-2 text-xs font-semibold text-bone-500 sm:hidden">
+      <button onClick={() => setSettingsOpen(true)} className="-mt-3 mb-3 flex min-h-[40px] items-center gap-2 text-xs font-semibold text-bone-500 sm:hidden">
         <Settings2 className="h-3.5 w-3.5" /> Taxa actual: <span className="text-gold">{fmtRate(rate)}</span>
       </button>
 
@@ -79,17 +79,17 @@ function Kpis({ s, loading, onReconcile }: { s: ReturnType<typeof summarize>; lo
     { label: s.balance.reconciled ? "Saldo disponível" : "Saldo estimado", value: s.balance.hasData ? fmtUSDT(s.balance.value) : "—", tone: s.balance.value < 0 ? "loss" : undefined,
       sub: s.balance.reconciled
         ? <span className="text-gain">Reconciliado a {fmtDate(s.balance.reconciledOn!)}</span>
-        : <button onClick={onReconcile} className="text-left text-gold/90 underline-offset-2 hover:underline">Estimativa · reconciliar saldo</button> },
+        : <button onClick={onReconcile} className="-my-2 py-2 text-left text-gold/90 underline-offset-2 hover:underline">Estimativa · reconciliar saldo</button> },
   ];
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
+    <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 lg:grid-cols-3 lg:gap-4">
       {cards.map((c, i) => (
-        <div key={c.label} className={cx("card relative overflow-hidden p-4 sm:p-5", (c.hero || i === cards.length - 1) && "col-span-2 lg:col-span-1")} style={{ animationDelay: `${i * 30}ms` }}>
+        <div key={c.label} className={cx("card relative min-w-0 overflow-hidden p-4 sm:p-5", (c.hero || i === cards.length - 1) && "min-[380px]:col-span-2 lg:col-span-1")} style={{ animationDelay: `${i * 30}ms` }}>
           {c.hero && <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gold/10 blur-2xl" />}
           <div className="label">{c.label}</div>
           {loading ? <Skeleton className="mt-3 h-7 w-3/4" /> : (
-            <div className={cx("num mt-2 font-extrabold tracking-tight", c.hero ? "text-[28px] sm:text-[30px]" : "text-[19px] sm:text-[22px]",
-              c.tone === "gain" && "text-gain", c.tone === "loss" && "text-loss", c.tone === "gold" && "text-gold-300")}>{c.value}</div>
+            <div className="mt-2"><Amount value={c.value} size={c.hero ? "hero" : "lg"}
+              className={cx(c.tone === "gain" && "text-gain", c.tone === "loss" && "text-loss", c.tone === "gold" && "text-gold-300")} /></div>
           )}
           {c.sub && !loading && <div className="mt-1.5 text-[12px] text-bone-500">{c.sub}</div>}
         </div>
@@ -143,16 +143,16 @@ function History({ reports, loading, onEdit, onNew }: { reports: DailyReport[]; 
 
   return (
     <div className="space-y-4">
-      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
         <div className="flex w-max gap-1.5">
           {(Object.keys(RANGE_LABELS) as RangeKey[]).map((k) => (
-            <button key={k} onClick={() => setRange(k)} className={cx("rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition",
+            <button key={k} onClick={() => setRange(k)} className={cx("min-h-[38px] rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition",
               range === k ? "border-gold/50 bg-gold/[0.08] text-gold" : "border-white/[0.07] text-bone-500 hover:text-bone")}>{RANGE_LABELS[k]}</button>
           ))}
         </div>
       </div>
       {range === "custom" && (
-        <div className="grid max-w-md grid-cols-2 gap-3">
+        <div className="grid max-w-md grid-cols-1 gap-3 min-[360px]:grid-cols-2">
           <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="De" />
           <Input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} aria-label="Até" />
         </div>
@@ -165,9 +165,9 @@ function History({ reports, loading, onEdit, onNew }: { reports: DailyReport[]; 
           { k: t.profitMzn < 0 ? "Prejuízo" : "Lucro", v: fmtMZN(t.profitMzn), tone: t.profitMzn < 0 ? "loss" : t.profitMzn > 0 ? "gain" : undefined },
           { k: "ROAS", v: fmtRoas(t.roas) },
         ].map((x) => (
-          <div key={x.k} className="rounded-xl border border-white/[0.05] bg-ink-900/60 px-3.5 py-3">
+          <div key={x.k} className="min-w-0 rounded-xl border border-white/[0.05] bg-ink-900/60 px-3.5 py-3">
             <div className="text-[11px] font-semibold text-bone-500">{x.k}</div>
-            <div className={cx("num mt-1 text-[15px] font-bold", x.tone === "gain" && "text-gain", x.tone === "loss" && "text-loss")}>{x.v}</div>
+            <div className="mt-1"><Amount value={x.v} className={cx("font-bold", x.tone === "gain" && "text-gain", x.tone === "loss" && "text-loss")} /></div>
           </div>
         ))}
       </div>
@@ -210,13 +210,17 @@ function History({ reports, loading, onEdit, onNew }: { reports: DailyReport[]; 
         {/* Lista — telemóvel */}
         <div className="space-y-2 md:hidden">
           {days.map((d) => (
-            <button key={d.date} onClick={() => setOpen(d)} className="card flex w-full items-center gap-3 p-4 text-left">
+            <button key={d.date} onClick={() => setOpen(d)} className="card flex w-full items-center gap-2 p-4 text-left">
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 text-sm font-semibold">{fmtDate(d.date)}{d.reports.length > 1 && <span className="rounded-full bg-gold/10 px-1.5 text-[10px] text-gold">×{d.reports.length}</span>}</div>
-                <div className="num mt-1 text-xs text-bone-500">Fat. {fmtMZN(d.revenueMzn)} · ROAS {fmtRoas(d.roas)}</div>
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                  <span className="flex items-center gap-2 text-sm font-semibold">{fmtDate(d.date)}{d.reports.length > 1 && <span className="rounded-full bg-gold/10 px-1.5 text-[10px] text-gold">×{d.reports.length}</span>}</span>
+                  <Amount value={fmtMZN(d.profitMzn)} className={cx("font-bold", d.profitMzn < 0 ? "text-loss" : d.profitMzn > 0 ? "text-gain" : "")} />
+                </div>
+                <div className="num mt-1 flex flex-wrap gap-x-2 text-xs text-bone-500">
+                  <span className="whitespace-nowrap">Fat. {fmtMZN(d.revenueMzn)}</span><span className="whitespace-nowrap">ROAS {fmtRoas(d.roas)}</span>
+                </div>
               </div>
-              <div className={cx("num text-right text-sm font-bold", d.profitMzn < 0 ? "text-loss" : d.profitMzn > 0 ? "text-gain" : "")}>{fmtMZN(d.profitMzn)}</div>
-              <ChevronRight className="h-4 w-4 text-bone-600" />
+              <ChevronRight className="h-4 w-4 shrink-0 text-bone-600" />
             </button>
           ))}
         </div>
@@ -243,7 +247,7 @@ function DayDetail({ day, onClose, onEdit }: { day: DayRow | null; onClose: () =
             {d.reports.length > 1 && (
               <div className="rounded-2xl border border-gold/20 bg-gold/[0.05] p-4 text-sm">
                 <div className="label mb-2 text-gold/80">Consolidado do dia</div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 break-words sm:grid-cols-4">
                   <Stat k="Faturamento" v={fmtMZN(d.revenueMzn)} /><Stat k="Despesa pub." v={fmtMZN(d.adSpendMzn)} />
                   <Stat k={d.profitMzn < 0 ? "Prejuízo" : "Lucro"} v={fmtMZN(d.profitMzn)} tone={d.profitMzn < 0 ? "loss" : "gain"} /><Stat k="ROAS" v={fmtRoas(d.roas)} />
                 </div>
@@ -251,7 +255,7 @@ function DayDetail({ day, onClose, onEdit }: { day: DayRow | null; onClose: () =
             )}
             {d.reports.map((r) => (
               <div key={r.id} className="rounded-2xl border border-white/[0.07] bg-ink-850 p-4">
-                <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-3 break-words text-sm sm:grid-cols-3">
                   <Stat k="Gasto em anúncios" v={`${fmtQty(r.ad_spend)} ${r.spend_currency}`} />
                   <Stat k="Taxa" v={fmtRate(r.rate)} />
                   <Stat k="Despesa publicitária" v={fmtMZN(r.ad_spend_mzn)} />
@@ -259,7 +263,7 @@ function DayDetail({ day, onClose, onEdit }: { day: DayRow | null; onClose: () =
                   <Stat k="Outras despesas" v={fmtMZN(r.other_expenses_mzn)} />
                   <Stat k="ROAS" v={fmtRoas(r.roas)} />
                 </div>
-                <div className="mt-3 flex items-center justify-between border-t border-white/[0.06] pt-3">
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-3">
                   <div>
                     <div className="text-[11px] font-semibold text-bone-500">{r.net_profit_mzn < 0 ? "Prejuízo" : "Lucro líquido"}</div>
                     <div className={cx("num text-lg font-extrabold", r.net_profit_mzn < 0 ? "text-loss" : r.net_profit_mzn > 0 ? "text-gain" : "")}>{fmtMZN(r.net_profit_mzn)}</div>
@@ -310,18 +314,18 @@ function InvestmentsList({ items, loading, onEdit, onNew }: { items: Investment[
     <>
       <div className="card divide-y divide-white/[0.05] overflow-hidden">
         {items.map((i) => (
-          <div key={i.id} className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
+          <div key={i.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3.5 sm:flex-nowrap sm:px-5">
             <div className={cx("grid h-10 w-10 shrink-0 place-items-center rounded-xl border", i.loaded_to_ads ? "border-gold/25 bg-gold/[0.07] text-gold" : "border-white/10 bg-white/[0.03] text-bone-400")}>
               <Coins className="h-[18px] w-[18px]" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="num flex flex-wrap items-baseline gap-x-2 text-[15px] font-bold">{fmtUSDT(i.usdt_amount)}<span className="text-xs font-semibold text-bone-500">× {fmtRate(i.rate)}</span></div>
+              <div className="num flex flex-wrap items-baseline gap-x-2 break-all text-[15px] font-bold">{fmtUSDT(i.usdt_amount)}<span className="text-xs font-semibold text-bone-500">× {fmtRate(i.rate)}</span></div>
               <div className="truncate text-xs text-bone-500">{fmtDateTime(i.occurred_at)} · {i.loaded_to_ads ? "Carregado" : "Em carteira"}{i.note ? ` · ${i.note}` : ""}</div>
             </div>
-            <div className="num text-right text-sm font-bold text-gold-300">{fmtMZN(i.mzn_amount)}</div>
+            <div className="order-last w-full pl-[52px] sm:order-none sm:w-auto sm:pl-0"><Amount value={fmtMZN(i.mzn_amount)} className="text-gold-300" /></div>
             <div className="flex">
-              <button onClick={() => onEdit(i)} className="rounded-lg p-2 text-bone-500 hover:bg-white/5 hover:text-bone" aria-label="Editar"><Pencil className="h-4 w-4" /></button>
-              <button onClick={() => setConfirm(i)} className="rounded-lg p-2 text-bone-500 hover:bg-loss/10 hover:text-loss" aria-label="Eliminar"><Trash2 className="h-4 w-4" /></button>
+              <button onClick={() => onEdit(i)} className="grid h-10 w-10 place-items-center rounded-lg text-bone-500 hover:bg-white/5 hover:text-bone" aria-label="Editar"><Pencil className="h-4 w-4" /></button>
+              <button onClick={() => setConfirm(i)} className="grid h-10 w-10 place-items-center rounded-lg text-bone-500 hover:bg-loss/10 hover:text-loss" aria-label="Eliminar"><Trash2 className="h-4 w-4" /></button>
             </div>
           </div>
         ))}

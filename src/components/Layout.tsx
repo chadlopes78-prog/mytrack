@@ -42,29 +42,29 @@ export function Layout() {
       </aside>
 
       {/* Barra superior — telemóvel/tablet */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/[0.05] bg-ink-950/85 px-4 py-3 backdrop-blur-xl lg:hidden"
+      <header className="px-safe sticky top-0 z-30 [@media(max-height:500px)]:static flex items-center justify-between border-b border-white/[0.05] bg-ink-950/85 py-3 backdrop-blur-xl lg:hidden"
         style={{ paddingTop: "max(env(safe-area-inset-top), 12px)" }}>
         <div className="flex items-center gap-2.5">
           <Mark className="h-8 w-8" />
           <span className="text-[13px] font-extrabold tracking-[0.22em]">BARON <span className="text-gold">CONTROL</span></span>
         </div>
-        <button onClick={signOut} className="rounded-lg p-2 text-bone-500 transition hover:text-loss" aria-label="Terminar sessão"><LogOut className="h-5 w-5" /></button>
+        <button onClick={signOut} className="-mr-2 grid h-10 w-10 place-items-center rounded-lg text-bone-500 transition hover:text-loss" aria-label="Terminar sessão"><LogOut className="h-5 w-5" /></button>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-4 pb-32 pt-5 sm:px-6 lg:px-10 lg:pb-16 lg:pt-10">
+      <main className="px-safe mx-auto w-full max-w-6xl pb-[calc(6.5rem+env(safe-area-inset-bottom))] [@media(max-height:500px)]:pb-20 pt-5 sm:px-6 lg:px-10 lg:pb-16 lg:pt-10">
         <Outlet />
       </main>
 
       {/* Navegação inferior — telemóvel/tablet */}
-      <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-white/[0.06] bg-ink-950/90 backdrop-blur-xl lg:hidden">
-        <div className="mx-auto flex max-w-md">
+      <nav className="pb-safe px-safe fixed inset-x-0 bottom-0 z-30 border-t border-white/[0.06] bg-ink-950/90 backdrop-blur-xl lg:hidden">
+        <div className="mx-auto flex max-w-md [@media(max-height:500px)]:max-w-xl">
           {tabs.map(({ to, label, short, icon: Icon }) => (
             <NavLink key={to} to={to} className={({ isActive }) => cx(
-              "relative flex flex-1 flex-col items-center gap-1 pb-2.5 pt-3 text-[11px] font-semibold transition",
+              "relative flex flex-1 flex-col items-center gap-1 pb-2.5 pt-3 text-[11px] font-semibold transition [@media(max-height:500px)]:flex-row [@media(max-height:500px)]:justify-center [@media(max-height:500px)]:gap-2 [@media(max-height:500px)]:py-2 [@media(max-height:500px)]:text-[12px]",
               isActive ? "text-gold" : "text-bone-500")}>
               {({ isActive }) => (<>
                 <span className={cx("absolute top-0 h-[2px] w-8 rounded-full bg-gold transition", isActive ? "opacity-100" : "opacity-0")} />
-                <Icon className="h-[22px] w-[22px]" strokeWidth={1.8} />
+                <Icon className="h-[22px] w-[22px] [@media(max-height:500px)]:h-5 [@media(max-height:500px)]:w-5" strokeWidth={1.8} />
                 {short ?? label}
               </>)}
             </NavLink>
@@ -77,10 +77,10 @@ export function Layout() {
 
 export function PageHeader({ eyebrow, title, actions }: { eyebrow: string; title: string; actions?: React.ReactNode }) {
   return (
-    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between lg:mb-8">
+    <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between lg:mb-8">
       <div>
         <div className="label text-gold/80">{eyebrow}</div>
-        <h1 className="mt-1.5 text-[26px] font-extrabold tracking-tight sm:text-3xl">{title}</h1>
+        <h1 className="mt-1.5 whitespace-nowrap text-[26px] font-extrabold tracking-tight sm:text-3xl">{title}</h1>
       </div>
       {actions && <div className="grid grid-cols-1 gap-2.5 min-[420px]:flex min-[420px]:flex-wrap">{actions}</div>}
     </div>

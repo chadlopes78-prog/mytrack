@@ -87,17 +87,17 @@ export function Modal({ open, onClose, title, subtitle, children, footer, wide }
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby={id}>
       <div className="absolute inset-0 animate-fade bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div ref={panel} className={cx("relative flex max-h-[92dvh] w-full animate-sheet flex-col overflow-hidden rounded-t-3xl border border-white/[0.08] bg-ink-900 shadow-lift sm:rounded-3xl",
+      <div ref={panel} className={cx("relative flex max-h-[92dvh] w-full animate-sheet [@media(max-height:500px)]:max-h-[100dvh] flex-col overflow-hidden rounded-t-3xl border border-white/[0.08] bg-ink-900 shadow-lift sm:rounded-3xl",
         wide ? "sm:max-w-2xl" : "sm:max-w-lg")}>
         <div className="hairline absolute inset-x-8 top-0" />
         <div className="flex items-start justify-between gap-4 px-5 pb-3 pt-5 sm:px-7 sm:pt-6">
-          <div>
+          <div className="min-w-0">
             <h2 id={id} className="text-lg font-bold tracking-tight">{title}</h2>
             {subtitle && <p className="mt-0.5 text-sm text-bone-500">{subtitle}</p>}
           </div>
-          <button onClick={onClose} className="-mr-2 rounded-lg p-2 text-bone-500 transition hover:bg-white/5 hover:text-bone" aria-label="Fechar"><X className="h-5 w-5" /></button>
+          <button onClick={onClose} className="-mr-2 grid h-10 w-10 shrink-0 place-items-center rounded-lg text-bone-500 transition hover:bg-white/5 hover:text-bone" aria-label="Fechar"><X className="h-5 w-5" /></button>
         </div>
-        <div className="overflow-y-auto px-5 pb-5 sm:px-7">{children}</div>
+        <div className={cx("overscroll-contain overflow-y-auto px-5 sm:px-7", footer ? "pb-5" : "pb-[max(20px,env(safe-area-inset-bottom))]")}>{children}</div>
         {footer && <div className="pb-safe border-t border-white/[0.06] bg-ink-900 px-5 py-4 sm:px-7">{footer}</div>}
       </div>
     </div>,
@@ -146,11 +146,32 @@ export function Segmented<T extends string>({ value, onChange, options, classNam
     <div className={cx("inline-flex rounded-xl border border-white/[0.07] bg-ink-850 p-1", className)} role="radiogroup">
       {options.map((o) => (
         <button key={o.value} type="button" role="radio" aria-checked={value === o.value} onClick={() => onChange(o.value)}
-          className={cx("flex-1 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-semibold transition",
+          className={cx("min-h-[38px] flex-1 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-semibold transition",
             value === o.value ? "bg-ink-700 text-gold shadow-card" : "text-bone-500 hover:text-bone")}>
           {o.label}
         </button>
       ))}
     </div>
+  );
+}
+
+/** Valor monetário que nunca sai do cartão: a letra diminui com o número de
+ *  dígitos e a unidade (MT/USDT) pode passar para a linha seguinte. */
+export function Amount({ value, size = "md", className }: { value: string; size?: "hero" | "lg" | "md"; className?: string }) {
+  const i = value.lastIndexOf(" ");
+  const num = i > 0 ? value.slice(0, i) : value;
+  const unit = i > 0 ? value.slice(i + 1) : "";
+  const n = num.length;
+  const scale: Record<string, string[]> = {
+    hero: ["text-[30px]", "text-[26px]", "text-[22px]", "text-[19px]"],
+    lg: ["text-[22px]", "text-[19px]", "text-[17px]", "text-[15px]"],
+    md: ["text-[16px]", "text-[15px]", "text-[14px]", "text-[13px]"],
+  };
+  const step = n <= 9 ? 0 : n <= 12 ? 1 : n <= 15 ? 2 : 3;
+  return (
+    <span className={cx("num inline-flex max-w-full flex-wrap items-baseline gap-x-1.5 font-extrabold leading-tight tracking-tight", scale[size][step], className)}>
+      <span className="break-all">{num}</span>
+      {unit && <span className="text-[0.62em] font-bold opacity-80">{unit}</span>}
+    </span>
   );
 }

@@ -67,8 +67,8 @@ export default function AdminPage() {
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-bone-500" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Pesquisar por e-mail" className="pl-10" />
         </div>
-        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-          <Segmented value={filter} onChange={setFilter} options={[
+        <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
+          <Segmented className="w-max" value={filter} onChange={setFilter} options={[
             { value: "all", label: "Todos" }, { value: "pending", label: "Pendentes" }, { value: "approved", label: "Aprovados" },
             { value: "suspended", label: "Suspensos" }, { value: "rejected", label: "Rejeitados" }]} />
         </div>
@@ -83,7 +83,7 @@ export default function AdminPage() {
               <div key={u.id} className="flex flex-col gap-3 px-4 py-4 sm:px-5 md:flex-row md:items-center">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="truncate font-semibold">{u.email}</span>
+                    <span className="min-w-0 break-all font-semibold">{u.email}</span>
                     <span className={cx("rounded-full border px-2 py-0.5 text-[11px] font-semibold", STATUS[u.status].cls)}>{STATUS[u.status].label}</span>
                     {u.is_primary && <span className="flex items-center gap-1 rounded-full border border-gold/30 px-2 py-0.5 text-[11px] font-semibold text-gold"><ShieldCheck className="h-3 w-3" /> Admin principal</span>}
                     {!u.email_confirmed && <span className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-bone-500">E-mail não confirmado</span>}
