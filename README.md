@@ -91,7 +91,7 @@ O dashboard separa três valores: **USDT comprados** (todos os investimentos), *
    - *Password policy:* mínimo 8 caracteres, letras e dígitos.
    - *SMTP:* configurar um servidor SMTP próprio (o SMTP por defeito do Supabase tem um limite muito baixo de e-mails por hora).
 6. **Frontend:** copiar `.env.example` para `.env.local` (ou para as variáveis do serviço de alojamento) com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` (chave pública). **Nunca** colocar a `service_role` key no frontend.
-7. **Build e alojamento** (Vercel, Netlify, Cloudflare Pages…). Configurar o rewrite de SPA (todas as rotas → `index.html`).
+7. **Build e alojamento** (Vercel, Netlify, Cloudflare Pages…). O rewrite de SPA e os cabeçalhos de segurança (CSP, `X-Frame-Options`, HSTS) já estão em `vercel.json` (Vercel) e em `public/_headers` + `public/_redirects` (Netlify/Cloudflare). Se usar um domínio Supabase personalizado, acrescente-o a `connect-src` na CSP.
    ```bash
    npm run build
    ```
