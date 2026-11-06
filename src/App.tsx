@@ -3,7 +3,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthProvider";
 import { Layout } from "./components/Layout";
 import { Spinner } from "./components/ui";
-import { configError } from "./lib/supabase";
+import { configProblem } from "./lib/supabase";
+import { ConfigScreen } from "./pages/ConfigScreen";
 import { LoginPage } from "./pages/Login";
 import { ResetPasswordPage } from "./pages/ResetPassword";
 import { StatusGate } from "./pages/StatusGate";
@@ -24,7 +25,7 @@ export function FullScreenLoader({ text = "A carregar a sua conta…" }: { text?
 export function App() {
   const { session, ready, profile, profileLoading, profileError, isAdmin, recovery } = useAuth();
 
-  if (configError) return <div className="grid min-h-dvh place-items-center p-6 text-center text-sm text-loss">{configError}</div>;
+  if (configProblem) return <ConfigScreen problem={configProblem} />;
   if (!ready) return <FullScreenLoader text="A iniciar…" />;
   if (recovery) return <ResetPasswordPage />;
 

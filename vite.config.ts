@@ -3,6 +3,9 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  // NEXT_PUBLIC_* = nomes criados pela integração Supabase da Vercel.
+  // Nunca adicionar "SUPABASE_" aqui: exporia a SUPABASE_SERVICE_ROLE_KEY ao navegador.
+  envPrefix: ["VITE_", "NEXT_PUBLIC_"],
   server: { host: "127.0.0.1", port: 5173, strictPort: true },
   build: {
     target: "es2020",

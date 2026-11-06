@@ -64,6 +64,10 @@ O dashboard separa três valores: **USDT comprados** (todos os investimentos), *
 
 ## Configuração em produção (o que tem de ser feito fora do código)
 
+> **Guia simples, sem instalar nada (só os painéis do Supabase e da Vercel):** [`deploy/GUIA-VERCEL.md`](deploy/GUIA-VERCEL.md). Usa `deploy/database.sql` (esquema completo) e `deploy/vault-function.ts` (função do cofre num único ficheiro, para colar no editor do Supabase). A app aceita `VITE_SUPABASE_*` ou os nomes `NEXT_PUBLIC_SUPABASE_*` criados pela integração Supabase da Vercel.
+
+Alternativa pela linha de comandos:
+
 1. **Criar projecto em [supabase.com](https://supabase.com)** e instalar a CLI (`npm i -g supabase` ou `npx supabase`).
 2. **Ligar e aplicar o esquema:**
    ```bash

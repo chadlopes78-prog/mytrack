@@ -39,3 +39,14 @@ describe("cofre — AES-256-GCM", () => {
     await expect(loadKeyRing("1:abc")).rejects.toThrow();
   });
 });
+
+describe("ficheiros de deploy", () => {
+  it("deploy/vault-function.ts e deploy/database.sql estão actualizados", async () => {
+    const { readFileSync } = await import("node:fs");
+    // @ts-expect-error módulo .mjs sem tipos
+    const { buildVaultSingle } = await import("../../scripts/build-vault-single.mjs");
+    expect(readFileSync("deploy/vault-function.ts", "utf8")).toBe(buildVaultSingle(process.cwd()));
+    expect(readFileSync("deploy/database.sql", "utf8"))
+      .toBe(readFileSync("supabase/migrations/20261106000000_baron_control_schema.sql", "utf8"));
+  });
+});
