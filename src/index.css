@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg: #0B0B0C;
+}
+
+@layer base {
+  html, body, #root { min-height: 100%; }
+  body {
+    @apply bg-ink-950 text-bone font-sans antialiased;
+    font-feature-settings: "tnum" 1, "ss01" 1;
+    -webkit-tap-highlight-color: transparent;
+    background-image:
+      radial-gradient(1200px 600px at 85% -10%, rgba(217,180,90,0.06), transparent 60%),
+      radial-gradient(800px 500px at -10% 110%, rgba(217,180,90,0.035), transparent 60%);
+    background-attachment: fixed;
+  }
+  ::selection { background: rgba(217,180,90,0.35); }
+  input, select, textarea, button { font: inherit; }
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(0.8) sepia(0.4); opacity: .7; cursor: pointer; }
+  :focus-visible { outline: 2px solid rgba(217,180,90,0.7); outline-offset: 2px; border-radius: 10px; }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/[0.06] bg-ink-900/80 shadow-card backdrop-blur-sm;
+  }
+  .hairline { background: linear-gradient(90deg, transparent, rgba(217,180,90,0.45), transparent); height: 1px; }
+  .label { @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-bone-500; }
+  .input {
+    @apply w-full rounded-xl border border-white/[0.08] bg-ink-850 px-3.5 py-3 text-[15px] text-bone placeholder:text-bone-600
+           outline-none transition focus:border-gold/50 focus:bg-ink-800 focus:ring-4 focus:ring-gold/10 disabled:opacity-60;
+  }
+  .num { font-variant-numeric: tabular-nums; }
+  .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
