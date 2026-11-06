@@ -4,7 +4,7 @@
 //   portanto o RLS continua a aplicar-se (defesa em profundidade).
 // - A chave (VAULT_KEYS) existe só nos segredos da função.
 // - Nunca regista credenciais em logs.
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.45.4";
+// Sem dependências externas: fala directamente com as APIs Auth e REST do Supabase.
 import { decryptField, encryptField, loadKeyRing, type KeyRing } from "../_shared/crypto.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -74,15 +74,67 @@ async function publicView(r: KeyRing, row: Row, withNotes: boolean) {
   };
 }
 
-async function loadRow(db: SupabaseClient, id: string): Promise<Row> {
-  const { data, error } = await db.from("facebook_accounts").select("*").eq("id", id).maybeSingle();
-  if (error) throw new HttpError(500, "db_error");
-  if (!data) throw new HttpError(404, "not_found"); // inclui registos de outros utilizadores (RLS)
-  return data as Row;
+/** Cliente REST mínimo que actua com o JWT do utilizador (RLS aplica-se). */
+class Db {
+  constructor(private jwt: string) {}
+  async req(method: string, path: string, body?: unknown, prefer?: string): Promise<{ status: number; data: unknown; headers: Headers }> {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      method,
+      headers: {
+        apikey: ANON_KEY,
+        Authorization: `Bearer ${this.jwt}`,
+        "Content-Type": "application/json",
+        ...(prefer ? { Prefer: prefer } : {}),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+    return { status: res.status, data, headers: res.headers };
+  }
+  async rows<T>(method: string, path: string, body?: unknown, prefer?: string): Promise<T[]> {
+    const r = await this.req(method, path, body, prefer);
+    if (r.status >= 400) {
+      const code = (r.data as { code?: string } | null)?.code;
+      throw new HttpError(code === "23505" ? 409 : 500, code === "23505" ? "conflict" : "db_error");
+    }
+    return (r.data ?? []) as T[];
+  }
 }
 
-async function audit(db: SupabaseClient, action: string, accountId: string | null) {
-  await db.from("vault_audit").insert({ action, account_id: accountId });
+async function getUser(jwt: string): Promise<{ id: string; email: string } | null> {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { apikey: ANON_KEY, Authorization: `Bearer ${jwt}` } });
+  if (!res.ok) return null;
+  const u = await res.json();
+  return u?.id ? { id: u.id, email: u.email } : null;
+}
+
+/** Verifica a palavra-passe criando uma sessão temporária, que é logo terminada. */
+async function verifyPassword(email: string, password: string, expectedId: string): Promise<boolean> {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: { apikey: ANON_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) { await res.body?.cancel(); return false; }
+  const session = await res.json();
+  const ok = session?.user?.id === expectedId;
+  if (session?.access_token) {
+    await fetch(`${SUPABASE_URL}/auth/v1/logout?scope=local`, {
+      method: "POST", headers: { apikey: ANON_KEY, Authorization: `Bearer ${session.access_token}` },
+    }).then((r) => r.body?.cancel()).catch(() => {});
+  }
+  return ok;
+}
+
+async function loadRow(db: Db, id: string): Promise<Row> {
+  const rows = await db.rows<Row>("GET", `facebook_accounts?id=eq.${id}&select=*`);
+  if (rows.length === 0) throw new HttpError(404, "not_found"); // inclui registos de outros utilizadores (RLS)
+  return rows[0];
+}
+
+async function audit(db: Db, action: string, accountId: string | null) {
+  await db.req("POST", "vault_audit", { action, account_id: accountId }, "return=minimal");
 }
 
 async function handle(req: Request): Promise<Response> {
@@ -93,15 +145,11 @@ async function handle(req: Request): Promise<Response> {
   const jwt = authHeader.replace(/^Bearer\s+/i, "");
   if (!jwt) throw new HttpError(401, "unauthorized");
 
-  const db = createClient(SUPABASE_URL, ANON_KEY, {
-    global: { headers: { Authorization: `Bearer ${jwt}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const { data: userData, error: userErr } = await db.auth.getUser(jwt);
-  if (userErr || !userData.user) throw new HttpError(401, "unauthorized");
-  const user = userData.user;
+  const user = await getUser(jwt);
+  if (!user) throw new HttpError(401, "unauthorized");
+  const db = new Db(jwt);
 
-  const { data: profile } = await db.from("profiles").select("status").eq("id", user.id).maybeSingle();
+  const [profile] = await db.rows<{ status: string }>("GET", `profiles?id=eq.${user.id}&select=status`);
   if (!profile || profile.status !== "approved") throw new HttpError(403, "account_not_approved");
 
   let body: Record<string, unknown>;
@@ -110,9 +158,8 @@ async function handle(req: Request): Promise<Response> {
 
   switch (body.action) {
     case "list": {
-      const { data, error } = await db.from("facebook_accounts").select("*").order("created_at", { ascending: false });
-      if (error) throw new HttpError(500, "db_error");
-      const items = await Promise.all((data as Row[]).map((row) => publicView(r, row, false)));
+      const data = await db.rows<Row>("GET", "facebook_accounts?select=*&order=created_at.desc");
+      const items = await Promise.all(data.map((row) => publicView(r, row, false)));
       return json(req, 200, { items });
     }
 
@@ -129,22 +176,18 @@ async function handle(req: Request): Promise<Response> {
       const password = str(body.password, "password", { max: 512 })!;
       const notes = str(body.notes, "notes", { max: 2000, required: false });
 
-      const existing = await db.from("facebook_accounts").select("*").eq("id", id).maybeSingle();
-      if (existing.data) return json(req, 200, { item: await publicView(r, existing.data as Row, true), duplicate: true });
+      const [existing] = await db.rows<Row>("GET", `facebook_accounts?id=eq.${id}&select=*`);
+      if (existing) return json(req, 200, { item: await publicView(r, existing, true), duplicate: true });
 
-      const { data, error } = await db.from("facebook_accounts").insert({
+      const [data] = await db.rows<Row>("POST", "facebook_accounts", {
         id, label,
         login_ciphertext: await encryptField(r, user.id, id, "login", login),
         password_ciphertext: await encryptField(r, user.id, id, "password", password),
         notes_ciphertext: notes ? await encryptField(r, user.id, id, "notes", notes) : null,
         key_version: r.current,
-      }).select("*").single();
-      if (error) {
-        if (error.code === "23505") throw new HttpError(409, "conflict");
-        throw new HttpError(500, "db_error");
-      }
+      }, "return=representation");
       await audit(db, "create", id);
-      return json(req, 201, { item: await publicView(r, data as Row, true) });
+      return json(req, 201, { item: await publicView(r, data, true) });
     }
 
     case "update": {
@@ -177,17 +220,16 @@ async function handle(req: Request): Promise<Response> {
           await decryptField(r, row.user_id, id, "notes", row.notes_ciphertext));
       }
       patch.key_version = r.current;
-      const { data, error } = await db.from("facebook_accounts").update(patch).eq("id", id).select("*").single();
-      if (error) throw new HttpError(500, "db_error");
+      const [data] = await db.rows<Row>("PATCH", `facebook_accounts?id=eq.${id}`, patch, "return=representation");
+      if (!data) throw new HttpError(404, "not_found");
       await audit(db, "update", id);
-      return json(req, 200, { item: await publicView(r, data as Row, true) });
+      return json(req, 200, { item: await publicView(r, data, true) });
     }
 
     case "delete": {
       const id = uuid(body.id);
-      const { data, error } = await db.from("facebook_accounts").delete().eq("id", id).select("id");
-      if (error) throw new HttpError(500, "db_error");
-      if (!data || data.length === 0) throw new HttpError(404, "not_found");
+      const data = await db.rows<{ id: string }>("DELETE", `facebook_accounts?id=eq.${id}`, undefined, "return=representation");
+      if (data.length === 0) throw new HttpError(404, "not_found");
       await audit(db, "delete", id);
       return json(req, 200, { ok: true });
     }
@@ -197,20 +239,17 @@ async function handle(req: Request): Promise<Response> {
       const accountPassword = str(body.account_password, "account_password", { max: 512 })!;
 
       const since = new Date(Date.now() - LOCK_MINUTES * 60_000).toISOString();
-      const { count } = await db.from("vault_audit").select("id", { count: "exact", head: true })
-        .eq("action", "reveal_failed").gte("created_at", since);
-      if ((count ?? 0) >= MAX_FAILED_REVEALS) throw new HttpError(429, "too_many_attempts");
+      const failed = await db.rows<{ id: number }>("GET",
+        `vault_audit?select=id&action=eq.reveal_failed&created_at=gte.${encodeURIComponent(since)}&limit=${MAX_FAILED_REVEALS}`);
+      if (failed.length >= MAX_FAILED_REVEALS) throw new HttpError(429, "too_many_attempts");
 
       const row = await loadRow(db, id);
 
       // Reautenticação: verifica a palavra-passe da conta BARON CONTROL.
-      const verifier = createClient(SUPABASE_URL, ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
-      const { data: re, error: reErr } = await verifier.auth.signInWithPassword({ email: user.email!, password: accountPassword });
-      if (reErr || !re.user || re.user.id !== user.id) {
+      if (!(await verifyPassword(user.email, accountPassword, user.id))) {
         await audit(db, "reveal_failed", id);
         throw new HttpError(403, "reauth_failed");
       }
-      await verifier.auth.signOut({ scope: "local" }); // termina apenas a sessão de verificação
 
       const password = await decryptField(r, row.user_id, id, "password", row.password_ciphertext);
       await audit(db, "reveal", id);
