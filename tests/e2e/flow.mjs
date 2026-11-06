@@ -112,7 +112,7 @@ try {
       const d = pu.getByRole("dialog");
       await d.getByPlaceholder("0").fill(q);
       const expected = { 20: "1.500,00 MT", 30: "2.250,00 MT", 15: "1.125,00 MT" }[q];
-      await waitMatch(d.locator(".text-gold-300").first(), new RegExp(`^${expected.replace(".", "\\.")}$`));
+      await waitMatch(d.getByText("Valor em meticais").locator(".."), new RegExp(expected.replace(".", "\\.")));
       if (q === "15") await d.getByRole("button", { name: /Em carteira/ }).click();
       // duplo clique não pode duplicar
       await d.getByRole("button", { name: "Guardar investimento" }).dblclick();

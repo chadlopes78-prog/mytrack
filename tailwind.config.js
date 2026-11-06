@@ -7,9 +7,9 @@ export default {
       colors: {
         ink: { 950: "#0B0B0C", 900: "#111113", 850: "#141416", 800: "#18181B", 700: "#212125", 600: "#2C2C31", 500: "#3A3A40" },
         bone: { DEFAULT: "#F2EFE8", 200: "#D8D4CB", 400: "#A19D94", 500: "#7D7A73", 600: "#5F5C56" },
-        gold: { DEFAULT: "#D9B45A", 300: "#E8CD8B", 600: "#B8913A", 900: "#3A2F15" },
-        gain: { DEFAULT: "#3FC98A", 900: "#0F2E21" },
-        loss: { DEFAULT: "#F0605D", 900: "#3A1615" },
+        gold: { DEFAULT: "#E2BC63", 300: "#F0D58F", 600: "#B8913A", 900: "#3A2F15" },
+        gain: { DEFAULT: "#34D399", 300: "#6EE7B7", 900: "#0D2E22" },
+        loss: { DEFAULT: "#F87171", 300: "#FCA5A5", 900: "#3A1818" },
       },
       boxShadow: {
         card: "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 12px 32px -16px rgba(0,0,0,0.7)",

@@ -69,7 +69,7 @@ export function InvestmentForm({ open, onClose, defaultRate, editing }: { open: 
         <div className="flex min-w-0 items-center justify-between rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/[0.09] to-transparent px-4 py-3.5">
           <div>
             <div className="label">Valor em meticais</div>
-            <div className="mt-1"><Amount size="lg" value={total !== null ? fmtMZN(total) : "—"} className="text-gold-300" /></div>
+            <div className="mt-1"><Amount size="lg" value={total !== null ? fmtMZN(total) : "—"} tone={total !== null ? "gold" : "muted"} /></div>
           </div>
           <div className="num hidden text-right text-xs text-bone-500 sm:block">
             {Number.isFinite(u) ? usdt : "0"} USDT <ArrowRight className="inline h-3 w-3" /> × {Number.isFinite(r) ? rate : "—"} MT

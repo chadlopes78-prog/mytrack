@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { BarChart3, Calculator, ChevronRight, Coins, Pencil, Plus, Settings2, Trash2, Wallet } from "lucide-react";
 import { PageHeader } from "../../components/Layout";
-import { Amount, Button, ConfirmDialog, EmptyState, ErrorState, Input, Modal, Segmented, Skeleton, cx } from "../../components/ui";
+import { Amount, signTone, type Tone, Button, ConfirmDialog, EmptyState, ErrorState, Input, Modal, Segmented, Skeleton, cx } from "../../components/ui";
 import { useToast } from "../../components/Toast";
 import { useDeleteInvestment, useDeleteReport, useInvestments, useReports, useSettings } from "../../lib/data";
 import { errorMessage } from "../../lib/errors";
@@ -68,15 +68,15 @@ export function FinancePage() {
 }
 
 function Kpis({ s, loading, onReconcile }: { s: ReturnType<typeof summarize>; loading: boolean; onReconcile: () => void }) {
-  const profitTone = s.profitMzn > 0 ? "gain" : s.profitMzn < 0 ? "loss" : undefined;
-  const cards: { label: string; value: string; sub?: React.ReactNode; tone?: "gain" | "loss" | "gold"; hero?: boolean }[] = [
+  const profitTone = signTone(s.profitMzn);
+  const cards: { label: string; value: string; sub?: React.ReactNode; tone?: Tone; hero?: boolean }[] = [
     { label: s.profitMzn < 0 ? "Prejuízo acumulado" : "Lucro acumulado", value: fmtMZN(s.profitMzn), tone: profitTone, hero: true,
       sub: <>ROAS global <b className="num text-bone">{fmtRoas(s.roas)}</b></> },
     { label: "Faturamento total", value: fmtMZN(s.revenueMzn), tone: "gold" },
-    { label: "Total gasto em anúncios", value: fmtMZN(s.adSpendMzn), sub: <span className="num">{fmtQty(s.adSpendUnits)} USD/USDT</span> },
+    { label: "Total gasto em anúncios", value: fmtMZN(s.adSpendMzn), tone: s.adSpendMzn > 0 ? "loss" : "neutral", sub: <span className="num">{fmtQty(s.adSpendUnits)} USD/USDT</span> },
     { label: "Total de USDT carregados", value: fmtUSDT(s.usdtLoaded), sub: s.usdtInWallet > 0 ? <span className="num">+ {fmtUSDT(s.usdtInWallet)} em carteira</span> : <span>Comprados: <span className="num">{fmtUSDT(s.usdtBought)}</span></span> },
     { label: "Total investido", value: fmtMZN(s.mznInvested), sub: <span>Em compras de USDT</span> },
-    { label: s.balance.reconciled ? "Saldo disponível" : "Saldo estimado", value: s.balance.hasData ? fmtUSDT(s.balance.value) : "—", tone: s.balance.value < 0 ? "loss" : undefined,
+    { label: s.balance.reconciled ? "Saldo disponível" : "Saldo estimado", value: s.balance.hasData ? fmtUSDT(s.balance.value) : "—", tone: !s.balance.hasData ? "muted" : s.balance.value < 0 ? "loss" : "neutral",
       sub: s.balance.reconciled
         ? <span className="text-gain">Reconciliado a {fmtDate(s.balance.reconciledOn!)}</span>
         : <button onClick={onReconcile} className="-my-2 py-2 text-left text-gold/90 underline-offset-2 hover:underline">Estimativa · reconciliar saldo</button> },
@@ -88,8 +88,7 @@ function Kpis({ s, loading, onReconcile }: { s: ReturnType<typeof summarize>; lo
           {c.hero && <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gold/10 blur-2xl" />}
           <div className="label">{c.label}</div>
           {loading ? <Skeleton className="mt-3 h-7 w-3/4" /> : (
-            <div className="mt-2"><Amount value={c.value} size={c.hero ? "hero" : "lg"}
-              className={cx(c.tone === "gain" && "text-gain", c.tone === "loss" && "text-loss", c.tone === "gold" && "text-gold-300")} /></div>
+            <div className="mt-2"><Amount value={c.value} size={c.hero ? "hero" : "lg"} tone={c.tone ?? "neutral"} /></div>
           )}
           {c.sub && !loading && <div className="mt-1.5 text-[12px] text-bone-500">{c.sub}</div>}
         </div>
@@ -160,14 +159,14 @@ function History({ reports, loading, onEdit, onNew }: { reports: DailyReport[]; 
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { k: "Faturamento", v: fmtMZN(t.revenueMzn) },
-          { k: "Despesas", v: fmtMZN(t.adSpendMzn + t.otherMzn), tone: "loss" },
-          { k: t.profitMzn < 0 ? "Prejuízo" : "Lucro", v: fmtMZN(t.profitMzn), tone: t.profitMzn < 0 ? "loss" : t.profitMzn > 0 ? "gain" : undefined },
-          { k: "ROAS", v: fmtRoas(t.roas) },
+          { k: "Faturamento", v: fmtMZN(t.revenueMzn), tone: "gold" as Tone },
+          { k: "Despesas", v: fmtMZN(t.adSpendMzn + t.otherMzn), tone: "loss" as Tone },
+          { k: t.profitMzn < 0 ? "Prejuízo" : "Lucro", v: fmtMZN(t.profitMzn), tone: signTone(t.profitMzn) },
+          { k: "ROAS", v: fmtRoas(t.roas), tone: "neutral" as Tone },
         ].map((x) => (
           <div key={x.k} className="min-w-0 rounded-xl border border-white/[0.05] bg-ink-900/60 px-3.5 py-3">
             <div className="text-[11px] font-semibold text-bone-500">{x.k}</div>
-            <div className="mt-1"><Amount value={x.v} className={cx("font-bold", x.tone === "gain" && "text-gain", x.tone === "loss" && "text-loss")} /></div>
+            <div className="mt-1"><Amount value={x.v} tone={x.tone} className="font-bold" /></div>
           </div>
         ))}
       </div>
@@ -214,7 +213,7 @@ function History({ reports, loading, onEdit, onNew }: { reports: DailyReport[]; 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                   <span className="flex items-center gap-2 text-sm font-semibold">{fmtDate(d.date)}{d.reports.length > 1 && <span className="rounded-full bg-gold/10 px-1.5 text-[10px] text-gold">×{d.reports.length}</span>}</span>
-                  <Amount value={fmtMZN(d.profitMzn)} className={cx("font-bold", d.profitMzn < 0 ? "text-loss" : d.profitMzn > 0 ? "text-gain" : "")} />
+                  <Amount value={fmtMZN(d.profitMzn)} tone={signTone(d.profitMzn)} className="font-bold" />
                 </div>
                 <div className="num mt-1 flex flex-wrap gap-x-2 text-xs text-bone-500">
                   <span className="whitespace-nowrap">Fat. {fmtMZN(d.revenueMzn)}</span><span className="whitespace-nowrap">ROAS {fmtRoas(d.roas)}</span>
@@ -322,7 +321,7 @@ function InvestmentsList({ items, loading, onEdit, onNew }: { items: Investment[
               <div className="num flex flex-wrap items-baseline gap-x-2 break-all text-[15px] font-bold">{fmtUSDT(i.usdt_amount)}<span className="text-xs font-semibold text-bone-500">× {fmtRate(i.rate)}</span></div>
               <div className="truncate text-xs text-bone-500">{fmtDateTime(i.occurred_at)} · {i.loaded_to_ads ? "Carregado" : "Em carteira"}{i.note ? ` · ${i.note}` : ""}</div>
             </div>
-            <div className="order-last w-full pl-[52px] sm:order-none sm:w-auto sm:pl-0"><Amount value={fmtMZN(i.mzn_amount)} className="text-gold-300" /></div>
+            <div className="order-last w-full pl-[52px] sm:order-none sm:w-auto sm:pl-0"><Amount value={fmtMZN(i.mzn_amount)} tone="gold" /></div>
             <div className="flex">
               <button onClick={() => onEdit(i)} className="grid h-10 w-10 place-items-center rounded-lg text-bone-500 hover:bg-white/5 hover:text-bone" aria-label="Editar"><Pencil className="h-4 w-4" /></button>
               <button onClick={() => setConfirm(i)} className="grid h-10 w-10 place-items-center rounded-lg text-bone-500 hover:bg-loss/10 hover:text-loss" aria-label="Eliminar"><Trash2 className="h-4 w-4" /></button>

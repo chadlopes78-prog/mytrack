@@ -157,7 +157,16 @@ export function Segmented<T extends string>({ value, onChange, options, classNam
 
 /** Valor monetário que nunca sai do cartão: a letra diminui com o número de
  *  dígitos e a unidade (MT/USDT) pode passar para a linha seguinte. */
-export function Amount({ value, size = "md", className }: { value: string; size?: "hero" | "lg" | "md"; className?: string }) {
+export type Tone = "neutral" | "gold" | "gain" | "loss" | "muted";
+/** Tom a partir do sinal: lucro verde, prejuízo coral, zero neutro. */
+export const signTone = (v: number): Tone => (v > 0 ? "gain" : v < 0 ? "loss" : "neutral");
+
+// Nomes de classe literais (o Tailwind remove classes montadas dinamicamente).
+const TONE_CLASS: Record<Tone, string> = {
+  neutral: "tone-neutral", gold: "tone-gold", gain: "tone-gain", loss: "tone-loss", muted: "tone-muted",
+};
+
+export function Amount({ value, size = "md", tone = "neutral", className }: { value: string; size?: "hero" | "lg" | "md"; tone?: Tone; className?: string }) {
   const i = value.lastIndexOf(" ");
   const num = i > 0 ? value.slice(0, i) : value;
   const unit = i > 0 ? value.slice(i + 1) : "";
@@ -170,8 +179,8 @@ export function Amount({ value, size = "md", className }: { value: string; size?
   const step = n <= 9 ? 0 : n <= 12 ? 1 : n <= 15 ? 2 : 3;
   return (
     <span className={cx("num inline-flex max-w-full flex-wrap items-baseline gap-x-1.5 font-extrabold leading-tight tracking-tight", scale[size][step], className)}>
-      <span className="break-all">{num}</span>
-      {unit && <span className="text-[0.62em] font-bold opacity-80">{unit}</span>}
+      <span className={cx("break-all", TONE_CLASS[tone])}>{num}</span>
+      {unit && <span className={cx("text-[0.62em] font-bold opacity-75", TONE_CLASS[tone])}>{unit}</span>}
     </span>
   );
 }

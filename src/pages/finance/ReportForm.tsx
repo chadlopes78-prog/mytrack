@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useState, type FormEvent } from "react";
 import { AlertTriangle } from "lucide-react";
-import { Amount, Button, Field, Input, Modal, Segmented, cx } from "../../components/ui";
+import { Amount, signTone, Button, Field, Input, Modal, Segmented, cx } from "../../components/ui";
 import { useToast } from "../../components/Toast";
 import { hasDuplicateReport, useSaveReport } from "../../lib/data";
 import { errorMessage } from "../../lib/errors";
@@ -100,8 +100,7 @@ export function ReportForm({ open, onClose, defaultRate, editing, reports }: {
           </dl>
           <div className="my-3 h-px bg-white/[0.07]" />
           <div className="label">{result?.outcome === "loss" ? "Prejuízo" : "Lucro líquido"}</div>
-          <div className="mt-1"><Amount size="lg" value={result ? fmtMZN(result.netProfitMzn) : "—"}
-            className={!result ? "text-bone-500" : result.outcome === "loss" ? "text-loss" : result.outcome === "profit" ? "text-gain" : "text-bone"} /></div>
+          <div className="mt-1"><Amount size="lg" value={result ? fmtMZN(result.netProfitMzn) : "—"} tone={result ? signTone(result.netProfitMzn) : "muted"} /></div>
           <div className="mt-3 flex items-center justify-between rounded-xl bg-white/[0.03] px-3 py-2 text-sm">
             <span className="text-bone-500">ROAS</span>
             <span className="num font-bold">{result ? fmtRoas(result.roas) : "—"}</span>

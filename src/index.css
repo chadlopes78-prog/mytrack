@@ -58,3 +58,16 @@
 /* Datas no iOS: o Safari ignora a altura e alinha o texto à esquerda de forma diferente. */
 input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; display: flex; align-items: center; }
 input[type="date"]::-webkit-date-and-time-value, input[type="datetime-local"]::-webkit-date-and-time-value { text-align: left; }
+
+/* Cores dos valores: gradiente vertical subtil, legível em fundo escuro. */
+.tone-neutral, .tone-gold, .tone-gain, .tone-loss, .tone-muted {
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+}
+.tone-neutral { background-image: linear-gradient(180deg, #FFFFFF 0%, #E9E4D9 100%); }
+.tone-gold    { background-image: linear-gradient(180deg, #F7E3A8 0%, #E2BC63 55%, #CFA24A 100%); }
+.tone-gain    { background-image: linear-gradient(180deg, #8AF0C4 0%, #34D399 60%, #20B985 100%); }
+.tone-loss    { background-image: linear-gradient(180deg, #FFB4B4 0%, #F87171 60%, #E85A5A 100%); }
+.tone-muted   { background-image: linear-gradient(180deg, #8C8880 0%, #6F6C66 100%); }
+@media (forced-colors: active) {
+  .tone-neutral, .tone-gold, .tone-gain, .tone-loss, .tone-muted { -webkit-text-fill-color: CanvasText; color: CanvasText; background: none; }
+}

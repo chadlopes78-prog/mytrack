@@ -6,7 +6,7 @@ import { fmtDate, fmtMZN, fmtMZNShort } from "../../lib/format";
 // verde/vermelho fica na banda 6–8 de CVD, por isso cada série tem também
 // codificação secundária: despesas = barras, faturamento = linha contínua,
 // lucro = linha com marcadores; legenda e rótulos directos sempre presentes.
-const C = { revenue: "#D9B45A", expenses: "#F0605D", profit: "#3FC98A" };
+const C = { revenue: "#E2BC63", expenses: "#F87171", profit: "#34D399" };
 const H = 260, PAD = { t: 18, r: 64, b: 28, l: 48 };
 
 export function TrendChart({ days }: { days: DayRow[] }) {
