@@ -65,15 +65,24 @@ export function Modal({ open, onClose, title, subtitle, children, footer, wide }
 }) {
   const id = useId();
   const panel = useRef<HTMLDivElement>(null);
+  // onClose numa ref: o efeito corre só quando o modal abre/fecha. Antes, cada
+  // re-render da página-mãe (ex.: dados actualizados) voltava a focar o
+  // primeiro campo e desviava o que o utilizador estava a escrever.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeRef.current();
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    setTimeout(() => panel.current?.querySelector<HTMLElement>("input,select,textarea,button[data-autofocus]")?.focus(), 30);
-    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
-  }, [open, onClose]);
+    const t = setTimeout(() => {
+      if (!panel.current?.contains(document.activeElement)) {
+        panel.current?.querySelector<HTMLElement>("input,select,textarea,button[data-autofocus]")?.focus();
+      }
+    }, 30);
+    return () => { clearTimeout(t); document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+  }, [open]);
   if (!open) return null;
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby={id}>

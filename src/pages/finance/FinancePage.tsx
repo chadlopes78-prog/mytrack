@@ -84,7 +84,7 @@ function Kpis({ s, loading, onReconcile }: { s: ReturnType<typeof summarize>; lo
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
       {cards.map((c, i) => (
-        <div key={c.label} className={cx("card relative overflow-hidden p-4 sm:p-5", c.hero && "col-span-2 lg:col-span-1 lg:row-span-1")} style={{ animationDelay: `${i * 30}ms` }}>
+        <div key={c.label} className={cx("card relative overflow-hidden p-4 sm:p-5", (c.hero || i === cards.length - 1) && "col-span-2 lg:col-span-1")} style={{ animationDelay: `${i * 30}ms` }}>
           {c.hero && <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gold/10 blur-2xl" />}
           <div className="label">{c.label}</div>
           {loading ? <Skeleton className="mt-3 h-7 w-3/4" /> : (

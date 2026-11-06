@@ -30,7 +30,6 @@ export function ReportForm({ open, onClose, defaultRate, editing, reports }: {
     if (!open) return;
     setRequestId(crypto.randomUUID());
     setError(null); setDupConfirm(false);
-    console.log('DBG reset', open, !!editing, defaultRate);
     if (editing) {
       setDate(editing.report_date); setSpend(dec(editing.ad_spend)); setCurrency(editing.spend_currency);
       setRate(dec(editing.rate)); setRevenue(dec(editing.revenue_mzn)); setOther(editing.other_expenses_mzn ? dec(editing.other_expenses_mzn) : ""); setNote(editing.note ?? "");

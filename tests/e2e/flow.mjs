@@ -14,7 +14,12 @@ const user = { email: `e2e.${Date.now()}@test.baron`, password: "Utilizador-2026
 const results = [];
 const step = async (name, fn) => {
   try { await fn(); results.push(["PASS", name]); console.log("PASS", name); }
-  catch (e) { results.push(["FAIL", name]); console.log("FAIL", name, "\n ", e.message.split("\n").slice(0, 4).join("\n  ")); throw e; }
+  catch (e) {
+    for (const [ci, c] of browser.contexts().entries()) for (const [pi, pg] of c.pages().entries()) {
+      await pg.screenshot({ path: `${SHOTS}/FAIL-${ci}-${pi}.png` }).catch(() => {});
+      if (process.env.DEBUG_E2E) console.log("   page", ci, pi, (await pg.locator("body").innerText().catch(() => "")).slice(0, 400).replace(/\n/g, " | "));
+    }
+    results.push(["FAIL", name]); console.log("FAIL", name, "\n ", e.message.split("\n").slice(0, 4).join("\n  ")); throw e; }
 };
 
 async function confirmLink(email) {
@@ -33,7 +38,10 @@ const browser = await chromium.launch();
 const errors = [];
 const newCtx = async (opts = {}) => {
   const ctx = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"], ...opts });
-  ctx.on("page", (p) => p.on("pageerror", (e) => errors.push(e.message)));
+  ctx.on("page", (p) => {
+    p.on("pageerror", (e) => errors.push(e.message));
+    if (process.env.DEBUG_E2E) p.on("console", (m) => m.text().startsWith("DBG") && console.log("   ", Date.now() % 100000, m.text()));
+  });
   return ctx;
 };
 const login = async (page, { email, password }) => {
@@ -104,7 +112,7 @@ try {
       const d = pu.getByRole("dialog");
       await d.getByPlaceholder("0").fill(q);
       const expected = { 20: "1.500,00 MT", 30: "2.250,00 MT", 15: "1.125,00 MT" }[q];
-      assert.equal(money(await d.locator(".text-gold-300").first().innerText()), expected);
+      await waitMatch(d.locator(".text-gold-300").first(), new RegExp(`^${expected.replace(".", "\\.")}$`));
       if (q === "15") await d.getByRole("button", { name: /Em carteira/ }).click();
       // duplo clique não pode duplicar
       await d.getByRole("button", { name: "Guardar investimento" }).dblclick();
@@ -119,12 +127,10 @@ try {
     const d = pu.getByRole("dialog");
     const inputs = d.locator('input[inputmode="decimal"]');
     await inputs.nth(0).fill("40");
+    if (process.env.DEBUG_E2E) console.log("   ", Date.now() % 100000, "filled");
     await inputs.nth(2).fill("8500");
     await inputs.nth(3).fill("500");
-    const aside = money(await d.locator("aside").innerText());
-    assert.match(aside, /− 3.000,00 MT/);
-    assert.match(aside, /5.000,00 MT/);
-    assert.match(aside, /2,83×/);
+    await waitMatch(d.locator("aside"), /− 3\.000,00 MT[\s\S]*− 500,00 MT[\s\S]*5\.000,00 MT[\s\S]*2,83×/);
     await pu.screenshot({ path: `${SHOTS}/04-calcular-mobile.png` });
     await d.getByRole("button", { name: "Calcular e guardar" }).click();
     await pu.getByText("Relatório guardado.").waitFor();
@@ -144,7 +150,7 @@ try {
     await d.getByRole("radio", { name: "USD", exact: true }).click();
     const inputs = d.locator('input[inputmode="decimal"]');
     await inputs.nth(0).fill("20"); await inputs.nth(2).fill("1000");
-    assert.match(await d.locator("aside").innerText(), /Prejuízo/i);
+    await waitMatch(d.locator("aside"), /PREJUÍZO[\s\S]*−500,00 MT/i);
     await d.getByRole("button", { name: "Calcular e guardar" }).click();
     await pu.getByText("Relatório guardado.").waitFor();
     await waitMatch(pu.locator(".card").first(), /4\.500,00 MT/); // 5000 − 500

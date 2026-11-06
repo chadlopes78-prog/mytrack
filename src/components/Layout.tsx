@@ -82,7 +82,7 @@ export function PageHeader({ eyebrow, title, actions }: { eyebrow: string; title
         <div className="label text-gold/80">{eyebrow}</div>
         <h1 className="mt-1.5 text-[26px] font-extrabold tracking-tight sm:text-3xl">{title}</h1>
       </div>
-      {actions && <div className="flex flex-wrap gap-2.5">{actions}</div>}
+      {actions && <div className="grid grid-cols-1 gap-2.5 min-[420px]:flex min-[420px]:flex-wrap">{actions}</div>}
     </div>
   );
 }
