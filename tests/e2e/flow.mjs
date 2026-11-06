@@ -42,6 +42,16 @@ const login = async (page, { email, password }) => {
   await page.getByPlaceholder("••••••••").first().fill(password);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
 };
+async function waitMatch(locator, re, timeout = 8000) {
+  const end = Date.now() + timeout;
+  let last = "";
+  while (Date.now() < end) {
+    last = money(await locator.innerText());
+    if (re.test(last)) return;
+    await new Promise((r) => setTimeout(r, 150));
+  }
+  throw new Error(`"${last}" não corresponde a ${re}`);
+}
 const money = (t) => t.replace(/\s| | /g, " ");
 
 try {
@@ -93,7 +103,7 @@ try {
       await pu.getByRole("button", { name: "Adicionar investimento" }).click();
       const d = pu.getByRole("dialog");
       await d.getByPlaceholder("0").fill(q);
-      const expected = { 20: "1 500,00 MT", 30: "2 250,00 MT", 15: "1 125,00 MT" }[q];
+      const expected = { 20: "1.500,00 MT", 30: "2.250,00 MT", 15: "1.125,00 MT" }[q];
       assert.equal(money(await d.locator(".text-gold-300").first().innerText()), expected);
       if (q === "15") await d.getByRole("button", { name: /Em carteira/ }).click();
       // duplo clique não pode duplicar
@@ -101,10 +111,8 @@ try {
       await pu.getByText(/Investimento de .* guardado/).last().waitFor();
       await d.waitFor({ state: "detached" });
     }
-    const cards = money(await pu.locator(".card").first().locator("xpath=..").innerText());
-    assert.match(cards, /50 USDT/); // carregados
-    assert.match(cards, /\+ 15 USDT em carteira/);
-    assert.match(cards, /4 875,00 MT/); // total investido
+    // 50 carregados, 15 em carteira, 4.875 MT investidos — e nenhum duplicado do duplo clique
+    await waitMatch(pu.locator(".card").first().locator("xpath=.."), /50 USDT[\s\S]*\+ 15 USDT em carteira[\s\S]*4\.875,00 MT/);
   });
   await step("9-13. Calcular resultados: 40 USDT, 8 500 MT, 500 MT outras → lucro 5 000 MT, ROAS 2,83×", async () => {
     await pu.getByRole("button", { name: "Calcular resultados" }).first().click();
@@ -114,8 +122,8 @@ try {
     await inputs.nth(2).fill("8500");
     await inputs.nth(3).fill("500");
     const aside = money(await d.locator("aside").innerText());
-    assert.match(aside, /− 3 000,00 MT/);
-    assert.match(aside, /5 000,00 MT/);
+    assert.match(aside, /− 3.000,00 MT/);
+    assert.match(aside, /5.000,00 MT/);
     assert.match(aside, /2,83×/);
     await pu.screenshot({ path: `${SHOTS}/04-calcular-mobile.png` });
     await d.getByRole("button", { name: "Calcular e guardar" }).click();
@@ -133,26 +141,25 @@ try {
   await step("Prejuízo: segundo relatório no mesmo dia (20 USD, 1 000 MT) consolida", async () => {
     await pu.getByRole("button", { name: "Calcular resultados" }).first().click();
     const d = pu.getByRole("dialog");
-    await d.getByRole("radio", { name: "USD" }).click();
+    await d.getByRole("radio", { name: "USD", exact: true }).click();
     const inputs = d.locator('input[inputmode="decimal"]');
     await inputs.nth(0).fill("20"); await inputs.nth(2).fill("1000");
-    assert.match(await d.locator("aside").innerText(), /Prejuízo/);
+    assert.match(await d.locator("aside").innerText(), /Prejuízo/i);
     await d.getByRole("button", { name: "Calcular e guardar" }).click();
     await pu.getByText("Relatório guardado.").waitFor();
-    const kpi = money(await pu.locator(".card").first().innerText());
-    assert.match(kpi, /4 500,00 MT/); // 5000 − 500
+    await waitMatch(pu.locator(".card").first(), /4\.500,00 MT/); // 5000 − 500
   });
   await step("14/15. Histórico: abrir dia consolidado e editar relatório", async () => {
     await pu.getByText(/×2/).first().click();
     const d = pu.getByRole("dialog");
     await d.getByText("Consolidado do dia").waitFor();
-    await d.getByRole("button", { name: "Editar" }).last().click();
+    await d.getByRole("button", { name: "Editar" }).first().click(); // o mais recente (20 USD)
     const e = pu.getByRole("dialog");
     const inputs = e.locator('input[inputmode="decimal"]');
     await inputs.nth(2).fill("1500");
     await e.getByRole("button", { name: "Guardar alterações" }).click();
     await pu.getByText("Relatório actualizado.").waitFor();
-    assert.match(money(await pu.locator(".card").first().innerText()), /5 000,00 MT/);
+    await waitMatch(pu.locator(".card").first(), /5\.000,00 MT/); // 5000 + (1500 − 1500)
     await pu.waitForTimeout(400);
     await pu.screenshot({ path: `${SHOTS}/05-financeiro-mobile.png`, fullPage: true });
   });
@@ -199,7 +206,7 @@ try {
     await pu.reload();
     await pu.getByText("Facebook Principal").waitFor();
     await pu.getByRole("link", { name: "Financeiro" }).click();
-    assert.match(money(await pu.locator(".card").first().innerText()), /5 000,00 MT/);
+    await waitMatch(pu.locator(".card").first(), /5\.000,00 MT/);
   });
   await step("5/20/21. Logout e login noutro 'dispositivo' (desktop) recupera tudo", async () => {
     await pu.getByRole("button", { name: "Terminar sessão" }).click();
@@ -208,8 +215,7 @@ try {
     const pd = await ctxD.newPage();
     await login(pd, user);
     await pd.getByText("Visão geral").waitFor();
-    const k = money(await pd.locator(".card").first().locator("xpath=..").innerText());
-    assert.match(k, /5 000,00 MT/); assert.match(k, /50 USDT/);
+    await waitMatch(pd.locator(".card").first().locator("xpath=.."), /5\.000,00 MT[\s\S]*50 USDT/);
     await pd.waitForTimeout(400);
     await pd.screenshot({ path: `${SHOTS}/08-financeiro-desktop.png`, fullPage: true });
     await pd.getByRole("link", { name: "Contas Facebook" }).click();
@@ -222,8 +228,8 @@ try {
   await step("19. Isolamento na UI: admin não vê dados do utilizador", async () => {
     await pa.getByRole("link", { name: "Financeiro" }).click();
     await pa.getByText("Visão geral").waitFor();
-    const k = money(await pa.locator(".card").first().innerText());
-    assert.doesNotMatch(k, /5 000,00 MT/);
+    await pa.waitForTimeout(800);
+    assert.doesNotMatch(money(await pa.locator(".card").first().innerText()), /5\.000,00 MT/);
     await pa.getByRole("link", { name: "Contas Facebook" }).click();
     await pa.waitForTimeout(800);
     assert.equal(await pa.getByText("Facebook Principal").count(), 0);
@@ -231,7 +237,8 @@ try {
   await step("Suspensão: utilizador perde o acesso", async () => {
     await pa.getByRole("link", { name: "Administração" }).click();
     await pa.getByPlaceholder("Pesquisar por e-mail").fill(user.email);
-    await pa.getByRole("button", { name: "Suspender" }).click();
+    const row = pa.locator("div").filter({ hasText: user.email }).filter({ has: pa.getByRole("button", { name: "Suspender" }) }).last();
+    await row.getByRole("button", { name: "Suspender" }).click();
     await pa.getByRole("dialog").getByRole("button", { name: "Suspender" }).click();
     await pa.getByText("Utilizador suspenso.").waitFor();
     await login(pu, user);

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useLayoutEffect, useState, type FormEvent } from "react";
 import { Eye, EyeOff, Lock } from "lucide-react";
 import { Button, Field, Input, Modal } from "../../components/ui";
 import { useToast } from "../../components/Toast";
@@ -17,7 +17,7 @@ export function AccountForm({ open, onClose, editing, onSaved }: { open: boolean
   const [show, setShow] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return;
     setRequestId(crypto.randomUUID());
     setError(null); setShow(false); setPassword("");

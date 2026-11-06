@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useLayoutEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowRight } from "lucide-react";
 import { Button, Field, Input, Modal, cx } from "../../components/ui";
 import { useToast } from "../../components/Toast";
@@ -19,7 +19,7 @@ export function InvestmentForm({ open, onClose, defaultRate, editing }: { open: 
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return;
     setRequestId(crypto.randomUUID()); // novo identificador por formulário aberto
     setError(null);

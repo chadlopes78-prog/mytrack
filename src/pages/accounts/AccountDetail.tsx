@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Check, Copy, Eye, EyeOff, Lock, Pencil, Trash2 } from "lucide-react";
 import { Button, ConfirmDialog, ErrorState, Field, Input, Modal, Skeleton } from "../../components/ui";
@@ -136,7 +136,7 @@ function ReauthDialog({ open, accountId, onClose, onSuccess }: { open: boolean; 
   const [pw, setPw] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => { if (open) { setPw(""); setError(null); } }, [open]);
+  useLayoutEffect(() => { if (open) { setPw(""); setError(null); } }, [open]);
 
   async function submit(e: FormEvent) {
     e.preventDefault();

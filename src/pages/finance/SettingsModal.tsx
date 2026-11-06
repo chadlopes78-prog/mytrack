@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useLayoutEffect, useState, type FormEvent } from "react";
 import { Button, Field, Input, Modal } from "../../components/ui";
 import { useToast } from "../../components/Toast";
 import { useSaveSettings } from "../../lib/data";
@@ -15,7 +15,7 @@ export function SettingsModal({ open, onClose, settings, estimate }: { open: boo
   const [on, setOn] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return;
     setError(null);
     setRate(String(settings?.default_rate ?? 75).replace(".", ","));

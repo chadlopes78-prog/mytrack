@@ -1,7 +1,17 @@
-const mzn = new Intl.NumberFormat("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const qty = new Intl.NumberFormat("pt-PT", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+/** Formato moçambicano: ponto nos milhares, vírgula decimal ("1.500,00"). Agrupa sempre, também com 4 dígitos. */
+function group(v: number, minFrac: number, maxFrac: number): string {
+  const neg = v < 0;
+  const fixed = Math.abs(v).toFixed(maxFrac);
+  let [int, frac = ""] = fixed.split(".");
+  while (frac.length > minFrac && frac.endsWith("0")) frac = frac.slice(0, -1);
+  int = int.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  const out = frac ? `${int},${frac}` : int;
+  return neg && Number(fixed) !== 0 ? `−${out}` : out;
+}
+const mzn = { format: (v: number) => group(v, 2, 2) };
+const qty = { format: (v: number) => group(v, 0, 2) };
 
-/** 1500 -> "1 500,00 MT" (pt-PT usa espaço como separador de milhares). */
+/** 1500 -> "1.500,00 MT" */
 export const fmtMZN = (v: number) => `${mzn.format(v)} MT`;
 export const fmtMZNShort = (v: number) => {
   const a = Math.abs(v);

@@ -87,3 +87,17 @@ describe("parseAmount", () => {
     expect(parseAmount("-5")).toBeNaN();
   });
 });
+
+import { fmtMZN, fmtUSDT, fmtRoas } from "../../src/lib/format";
+describe("formatação", () => {
+  it("formato moçambicano", () => {
+    expect(fmtMZN(1500)).toBe("1.500,00 MT");
+    expect(fmtMZN(1234567.891)).toBe("1.234.567,89 MT");
+    expect(fmtMZN(-500)).toBe("−500,00 MT");
+    expect(fmtMZN(0)).toBe("0,00 MT");
+    expect(fmtUSDT(20)).toBe("20 USDT");
+    expect(fmtUSDT(12.5)).toBe("12,5 USDT");
+    expect(fmtRoas(2.8333)).toBe("2,83×");
+    expect(fmtRoas(null)).toBe("N/A");
+  });
+});

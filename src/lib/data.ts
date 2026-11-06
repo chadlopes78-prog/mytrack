@@ -173,3 +173,14 @@ export function useAdminAction() {
     onSettled: () => qc.invalidateQueries({ queryKey: ["admin_users", uid] }),
   });
 }
+
+/** Verifica no servidor (não na cache) se já existe um relatório idêntico. */
+export async function hasDuplicateReport(input: ReportInput, excludeId?: string): Promise<boolean> {
+  let q = supabase.from("daily_reports").select("id", { count: "exact", head: true })
+    .eq("report_date", input.report_date).eq("ad_spend", input.ad_spend)
+    .eq("revenue_mzn", input.revenue_mzn).eq("other_expenses_mzn", input.other_expenses_mzn);
+  if (excludeId) q = q.neq("id", excludeId);
+  const { count, error } = await q;
+  if (error) throw new Error(error.message);
+  return (count ?? 0) > 0;
+}

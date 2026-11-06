@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useLayoutEffect, useMemo, useState, type FormEvent } from "react";
 import { AlertTriangle } from "lucide-react";
 import { Button, Field, Input, Modal, Segmented, cx } from "../../components/ui";
 import { useToast } from "../../components/Toast";
-import { useSaveReport } from "../../lib/data";
+import { hasDuplicateReport, useSaveReport } from "../../lib/data";
 import { errorMessage } from "../../lib/errors";
 import { computeReport, findLikelyDuplicate, localDate, parseAmount } from "../../lib/finance";
 import { fmtMZN, fmtRoas } from "../../lib/format";
@@ -26,10 +26,11 @@ export function ReportForm({ open, onClose, defaultRate, editing, reports }: {
   const [error, setError] = useState<string | null>(null);
   const [dupConfirm, setDupConfirm] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return;
     setRequestId(crypto.randomUUID());
     setError(null); setDupConfirm(false);
+    console.log('DBG reset', open, !!editing, defaultRate);
     if (editing) {
       setDate(editing.report_date); setSpend(dec(editing.ad_spend)); setCurrency(editing.spend_currency);
       setRate(dec(editing.rate)); setRevenue(dec(editing.revenue_mzn)); setOther(editing.other_expenses_mzn ? dec(editing.other_expenses_mzn) : ""); setNote(editing.note ?? "");
@@ -53,11 +54,11 @@ export function ReportForm({ open, onClose, defaultRate, editing, reports }: {
     if (!Number.isFinite(rv)) return setError("Indique o faturamento total (pode ser 0).");
     if (!Number.isFinite(o)) return setError("Valor de outras despesas inválido.");
     const input = { report_date: date, ad_spend: s, spend_currency: currency, rate: r, revenue_mzn: rv, other_expenses_mzn: o, note: note.trim() || null };
-    if (!dupConfirm && findLikelyDuplicate(reports, input, editing?.id)) {
-      setDupConfirm(true);
-      return;
-    }
     try {
+      if (!dupConfirm && (findLikelyDuplicate(reports, input, editing?.id) || await hasDuplicateReport(input, editing?.id))) {
+        setDupConfirm(true);
+        return;
+      }
       await save.mutateAsync({ id: editing?.id, requestId, input });
       toast.success(editing ? "Relatório actualizado." : "Relatório guardado.");
       onClose();
